@@ -1,0 +1,7 @@
+Flask==3.0.0
+Werkzeug==3.0.1
+requests==2.31.0
+pydantic==2.5.3
+gunicorn==21.2.0
+redis==5.0.1
+urllib3==2.1.0
