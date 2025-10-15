@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  pharmacist-verification:
+    build: .
+    container_name: ppb-pharmacist-verification
+    ports:
+      - "5002:5002"
+    environment:
+      - FLASK_ENV=production
+      - DEBUG=False
+      - HOST=0.0.0.0
+      - PORT=5002
+      - REQUEST_TIMEOUT=15
+      - MAX_RETRIES=2
+      - RATE_LIMIT_DELAY=1.5
+      - CACHE_ENABLED=True
+      - CACHE_BACKEND=redis
+      - CACHE_TTL=7200
+      - REDIS_URL=redis://redis:6379/2
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - ppb-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ppb-pharmacist-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - ppb-network
+
+volumes:
+  redis-data:
+
+networks:
+  ppb-network:
+    driver: bridge

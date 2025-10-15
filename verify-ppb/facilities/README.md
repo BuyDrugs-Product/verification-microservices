@@ -12,7 +12,10 @@ Production-ready microservice for verifying Kenya Pharmacy and Poisons Board (PP
 docker-compose up -d
 
 # Local development
-python -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activate
+# Create virtual environment
+python -m venv .venv
+.venv\Scripts\activate  # On GitBash: source .venv/bin/activate
+
 pip install -r requirements.txt
 cp .env.example .env
 

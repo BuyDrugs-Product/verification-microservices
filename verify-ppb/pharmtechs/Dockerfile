@@ -9,6 +9,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Install curl for healthchecks
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 # Build stage - install dependencies
 FROM base AS builder
 
@@ -16,7 +21,7 @@ RUN pip install --upgrade pip
 
 # Copy only requirements first for better caching
 COPY requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r requirements.txt
+RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
 
 # Final stage - minimal runtime
 FROM base
@@ -39,7 +44,7 @@ EXPOSE 5001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:5001/health', timeout=5)" || exit 1
+    CMD curl --fail --silent --show-error --max-time 5 http://localhost:5001/health || exit 1
 
 # Run with gunicorn
 CMD ["gunicorn", "-c", "gunicorn.conf.py", "src.app:app"]
