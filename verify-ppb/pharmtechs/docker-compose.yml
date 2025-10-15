@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # PPB PharmTech License Verification Service
+  ppb-pharmtech-verification:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_ENV=production
+      - DEBUG=False
+      - PORT=5001
+      - CACHE_ENABLED=True
+      - CACHE_BACKEND=redis
+      - REDIS_URL=redis://redis:6379/1
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - ppb-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5001/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis cache for pharmtech verification (using DB 1)
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"  # Different external port to avoid conflict with facilities
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - ppb-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis-data:
+
+networks:
+  ppb-network:
+    driver: bridge
